@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Omarchy post-update hook
+# This runs after Omarchy system updates
+
+FORGE_DIR="$HOME/omarchy-forge"
+
+echo "Running Omarchy Forge post-update tasks..."
+
+# Re-apply any custom configurations that might have been overwritten
+if [ -f "$FORGE_DIR/bootstrap.sh" ]; then
+    echo "Re-applying configurations..."
+    bash "$FORGE_DIR/bootstrap.sh" --configs-only
+fi
+
+echo "Post-update tasks complete!"
