@@ -84,4 +84,55 @@ else
     echo "Hyprland config not found, skipping rounded corners config"
 fi
 
+# Screen backlight key bindings
+echo "Setting up screen backlight key bindings..."
+HYPR_CONFIG="$HOME/.config/hypr/hyprland.conf"
+
+if [ -f "$HYPR_CONFIG" ]; then
+    # Install brightnessctl if not present
+    if ! command -v brightnessctl &> /dev/null; then
+        echo "Installing brightnessctl..."
+        if command -v pacman &> /dev/null; then
+            sudo pacman -Sy --noconfirm --needed brightnessctl
+        elif command -v apt &> /dev/null; then
+            sudo apt update && sudo apt install -y brightnessctl
+        elif command -v dnf &> /dev/null; then
+            sudo dnf install -y brightnessctl
+        fi
+        echo "brightnessctl installed"
+    fi
+    
+    # Check if backlight bindings already exist
+    if ! grep -q "XF86MonBrightnessUp" "$HYPR_CONFIG"; then
+        # Add screen backlight key bindings
+        cat >> "$HYPR_CONFIG" << 'EOF'
+
+# Screen backlight control
+bind = , XF86MonBrightnessUp, exec, brightnessctl set +5%
+bind = , XF86MonBrightnessDown, exec, brightnessctl set 5%-
+EOF
+        echo "Added screen backlight key bindings (brightness up/down)"
+        echo "Screen backlight keys enabled - restart Hyprland or re-login to apply"
+    else
+        echo "Screen backlight key bindings already configured"
+    fi
+    
+    # Check if keyboard backlight bindings already exist
+    if ! grep -q "XF86KbdBrightnessUp" "$HYPR_CONFIG"; then
+        # Add keyboard backlight key bindings
+        cat >> "$HYPR_CONFIG" << 'EOF'
+
+# Keyboard backlight control (MacBook)
+bind = , XF86KbdBrightnessUp, exec, brightnessctl --device='*::kbd_backlight' set +10%
+bind = , XF86KbdBrightnessDown, exec, brightnessctl --device='*::kbd_backlight' set 10%-
+EOF
+        echo "Added keyboard backlight key bindings"
+        echo "Keyboard backlight keys enabled - restart Hyprland or re-login to apply"
+    else
+        echo "Keyboard backlight key bindings already configured"
+    fi
+else
+    echo "Hyprland config not found, skipping backlight key bindings"
+fi
+
 echo "System tweaks applied!"
