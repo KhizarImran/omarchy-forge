@@ -135,4 +135,45 @@ else
     echo "Hyprland config not found, skipping backlight key bindings"
 fi
 
+# Set VSCode as the default text editor
+echo "Setting VSCode as default editor..."
+
+if command -v code &> /dev/null; then
+    # Set EDITOR and VISUAL environment variables in ~/.bashrc and ~/.zshrc
+    for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
+        if [ -f "$rc" ]; then
+            if ! grep -q "EDITOR=code" "$rc"; then
+                cat >> "$rc" << 'EOF'
+
+# Default editor
+export EDITOR="code --wait"
+export VISUAL="code --wait"
+EOF
+                echo "Set EDITOR/VISUAL in $rc"
+            else
+                echo "EDITOR already set in $rc"
+            fi
+        fi
+    done
+
+    # Set as default for XDG mime types (text files, scripts etc.)
+    xdg-mime default code.desktop text/plain
+    xdg-mime default code.desktop text/x-shellscript
+    xdg-mime default code.desktop text/x-python
+    xdg-mime default code.desktop application/x-shellscript
+
+    # Git default editor
+    if git config --global core.editor | grep -q "nvim\|vim\|nano" 2>/dev/null || [ -z "$(git config --global core.editor)" ]; then
+        git config --global core.editor "code --wait"
+        echo "Set git core.editor to 'code --wait'"
+    else
+        echo "Git editor already customised, skipping"
+    fi
+
+    echo "VSCode set as default editor"
+else
+    echo "VSCode (code) not found, skipping default editor setup"
+    echo "Run ./apps/vscode.sh first to install VSCode"
+fi
+
 echo "System tweaks applied!"
