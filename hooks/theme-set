@@ -1,16 +1,17 @@
 #!/bin/bash
 
 # Omarchy theme-set hook
-# This is called with the snake-cased name of the theme that has just been set
+# Called by Omarchy with the snake-cased theme name after a theme switch.
+# Delegates to on-theme-change.sh which handles Razer RGB keyboard sync.
 
 THEME_NAME="$1"
 FORGE_DIR="$HOME/omarchy-forge"
 
-echo "Theme changed to: $THEME_NAME"
+echo "[forge] theme-set hook triggered: $THEME_NAME"
 
-# Example: Run custom script when theme changes
-# You can add theme-specific configurations here
-
+# Sync Razer keyboard RGB to the new theme's accent colour
 if [ -f "$FORGE_DIR/scripts/on-theme-change.sh" ]; then
     bash "$FORGE_DIR/scripts/on-theme-change.sh" "$THEME_NAME"
+else
+    echo "[forge] warning: scripts/on-theme-change.sh not found in $FORGE_DIR"
 fi
