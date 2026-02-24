@@ -17,25 +17,38 @@ if [ -z "$THEME_NAME" ]; then
     exit 1
 fi
 
-# Omarchy stores themes in these locations (user themes take priority)
-USER_THEME_DIR="$HOME/.config/omarchy/themes/$THEME_NAME"
-STOCK_THEME_DIR="$HOME/.local/share/omarchy/themes/$THEME_NAME"
+# Check for a per-theme keyboard colour override first
+OVERRIDES_FILE="$HOME/omarchy-forge/keyboard-colours.conf"
+HEX=""
 
-if [ -f "$USER_THEME_DIR/colors.toml" ]; then
-    COLORS_FILE="$USER_THEME_DIR/colors.toml"
-elif [ -f "$STOCK_THEME_DIR/colors.toml" ]; then
-    COLORS_FILE="$STOCK_THEME_DIR/colors.toml"
-else
-    echo "on-theme-change: could not find colors.toml for theme '$THEME_NAME'"
-    exit 1
+if [ -f "$OVERRIDES_FILE" ]; then
+    OVERRIDE=$(grep "^${THEME_NAME}=#" "$OVERRIDES_FILE" | sed 's/.*=#\([0-9a-fA-F]\{6\}\).*/\1/')
+    if [ -n "$OVERRIDE" ]; then
+        HEX="$OVERRIDE"
+        echo "on-theme-change: using keyboard override for '$THEME_NAME' -> #$HEX"
+    fi
 fi
 
-# Extract the accent hex value (format: accent = "#rrggbb")
-HEX=$(grep '^accent' "$COLORS_FILE" | sed 's/.*"#\([0-9a-fA-F]\{6\}\)".*/\1/')
-
+# Fall back to the theme's accent colour from colors.toml
 if [ -z "$HEX" ]; then
-    echo "on-theme-change: could not parse accent colour from $COLORS_FILE"
-    exit 1
+    USER_THEME_DIR="$HOME/.config/omarchy/themes/$THEME_NAME"
+    STOCK_THEME_DIR="$HOME/.local/share/omarchy/themes/$THEME_NAME"
+
+    if [ -f "$USER_THEME_DIR/colors.toml" ]; then
+        COLORS_FILE="$USER_THEME_DIR/colors.toml"
+    elif [ -f "$STOCK_THEME_DIR/colors.toml" ]; then
+        COLORS_FILE="$STOCK_THEME_DIR/colors.toml"
+    else
+        echo "on-theme-change: could not find colors.toml for theme '$THEME_NAME'"
+        exit 1
+    fi
+
+    HEX=$(grep '^accent' "$COLORS_FILE" | sed 's/.*"#\([0-9a-fA-F]\{6\}\)".*/\1/')
+
+    if [ -z "$HEX" ]; then
+        echo "on-theme-change: could not parse accent colour from $COLORS_FILE"
+        exit 1
+    fi
 fi
 
 # Convert hex to decimal R G B
